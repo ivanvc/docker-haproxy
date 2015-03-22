@@ -1,0 +1,35 @@
+global
+        log 127.0.0.1   local0
+        maxconn 4096
+        #daemon
+        pidfile /var/run/haproxy-private.pid
+
+defaults
+        log     global
+        mode    http
+        option  httplog
+        option  dontlognull
+        option forwardfor
+        option http-server-close
+
+frontend http-in
+        bind *:1024-9999
+
+        # Define hosts
+        {{range $dir := ls "/services/boxes"}}
+        acl host_{{base $dir}} hdr(host) -i {{base $dir}}.noob.work
+        {{end}}
+
+        # Figure out which one to use
+        {{range $dir := ls "/services/boxes"}}
+        use_backend {{base $dir}}_cluster if host_{{base $dir}}
+        {{end}}
+
+{{range $dir := ls "/services/boxes"}}
+backend {{base $dir}}_cluster
+        balance leastconn
+        option httpclose
+        option forwardfor
+        cookie JSESSIONID prefix
+        server node1 {{.}} cookie A check
+{{end}}
