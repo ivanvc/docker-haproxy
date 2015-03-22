@@ -1,7 +1,7 @@
 global
         log 127.0.0.1   local0
         maxconn 4096
-        #daemon
+        daemon
         pidfile /var/run/haproxy-private.pid
 
 defaults
@@ -9,27 +9,24 @@ defaults
         mode    http
         option  httplog
         option  dontlognull
-        option forwardfor
-        option http-server-close
+        option  forwardfor
+        option  http-server-close
+        timeout connect 5000ms
+        timeout client 50000ms
+        timeout server 50000ms
 
 frontend http-in
         bind *:1024-9999
 
-        # Define hosts
-        {{range $dir := ls "/services/boxes"}}
-        acl host_{{base $dir}} hdr(host) -i {{base $dir}}.noob.work
-        {{end}}
+        # Define hosts{{range gets "/services/boxes/*"}}
+        acl host_{{base .Key}} hdr(host) -i {{base .Key}}.noob.work{{end}}
 
-        # Figure out which one to use
-        {{range $dir := ls "/services/boxes"}}
-        use_backend {{base $dir}}_cluster if host_{{base $dir}}
-        {{end}}
+        # Figure out which one to use{{range gets "/services/boxes/*"}}
+        use_backend {{base .Key}}_cluster if host_{{base .Key}}{{end}}
 
-{{range $dir := ls "/services/boxes"}}
-backend {{base $dir}}_cluster
+{{range gets "/services/boxes/*"}}backend {{base .Key}}_cluster
         balance leastconn
         option httpclose
         option forwardfor
-        cookie JSESSIONID prefix
-        server node1 {{.}} cookie A check
+        server {{base .Key}}_server {{.Value}}
 {{end}}
