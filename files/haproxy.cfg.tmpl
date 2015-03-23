@@ -1,32 +1,38 @@
 global
-        log 127.0.0.1   local0
+        log     127.0.0.1 local0
         maxconn 4096
         daemon
         pidfile /var/run/haproxy-private.pid
 
 defaults
-        log     global
         mode    http
+        log     global
         option  httplog
         option  dontlognull
-        option  forwardfor
-        option  http-server-close
-        timeout connect 5000ms
-        timeout client 50000ms
-        timeout server 50000ms
+        timeout http-request 5s
+        timeout connect 5s
+        timeout server 10s
+        timeout client 30s
 
 frontend http-in
-        bind *:1024-9999
+        bind *:1234
+        bind *:1337
+        bind *:3000-3010
+        bind *:5000,*:5100,*:5200,*:5300,*:5400,*:5500,*:5600,*:5700,*:5800,*:5900
+        bind *:8000-8010
+        bind *:8080-8090
+        bind *:9291-9299
+        bind *:9391-9399
 
-        # Define hosts{{range gets "/services/boxes/*"}}
-        acl host_{{base .Key}} hdr(host) -i {{base .Key}}.noob.work{{end}}
-
-        # Figure out which one to use{{range gets "/services/boxes/*"}}
-        use_backend {{base .Key}}_cluster if host_{{base .Key}}{{end}}
+        reqadd X-Forwarded-Proto:\ http
+        {{range gets "/services/boxes/*"}}
+        acl is_{{base .Key}} hdr_beg(host) -i {{base .Key}}.
+        use_backend {{base .Key}}_cluster if is_{{base .Key}}{{end}}
 
 {{range gets "/services/boxes/*"}}backend {{base .Key}}_cluster
         balance leastconn
-        option httpclose
-        option forwardfor
-        server {{base .Key}}_server {{.Value}}
+        option  http-server-close
+        timeout http-keep-alive 3000
+        option  forwardfor
+        server {{base .Key}}server {{.Value}}
 {{end}}

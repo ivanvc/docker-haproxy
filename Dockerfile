@@ -10,9 +10,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends libpcre3-dev rs
 RUN mkdir /haproxy
 
 ADD files/boot.sh /haproxy/boot.sh
-ADD files/haproxy.cfg.tmpl /etc/confd/templates/haproxy.cfg.tmpl
 ADD files/haproxy.toml /etc/confd/conf.d/haproxy.toml
+ADD files/rsyslog.conf /etc/rsyslog.conf
+ADD files/rsyslog-haproxy.conf /etc/rsyslog.d/haproxy.conf
+ADD files/haproxy.cfg.tmpl /etc/confd/templates/haproxy.cfg.tmpl
 
-RUN service rsyslog start
+RUN service rsyslog restart
 
 CMD "/haproxy/boot.sh"
