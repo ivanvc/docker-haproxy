@@ -24,4 +24,4 @@ echo "[haproxy] starting haproxy service..."
 haproxy -f /usr/local/etc/haproxy/haproxy.cfg
 
 # Tail all nginx log files
-tail -f /var/log/haproxy.log
+tail -f /var/log/messages
