@@ -1,5 +1,5 @@
 [template]
-keys        = [ "/services/boxes" ]
+keys        = [ "/services" ]
 owner       = "root"
 mode        = "0644"
 src         = "haproxy.cfg.tmpl"
