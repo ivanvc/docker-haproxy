@@ -37,4 +37,5 @@ frontend http-in
         option  http-server-close
         timeout http-keep-alive 3000
         option  forwardfor
-        server {{base .Key}}server {{$data := json .Value}}{{$data.IP}}{{end}}
+        server {{base .Key}}server {{$data := json .Value}}{{$data.IP}}
+{{end}}
