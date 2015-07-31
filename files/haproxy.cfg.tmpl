@@ -14,6 +14,12 @@ defaults
         timeout server 10s
         timeout client 30s
 
+{{range $dir := ls "/services/ssl-servers"}}
+frontend https-{{$dir}}-server-in
+        bind *:443 ssl crt /certs/{{$dir}}.pem
+        reqadd X-Forwarded-Proto:\ http
+        default_backend {{$dir}}_cluster{{end}}
+
 frontend http-servers-in
         bind *:80
         reqadd X-Forwarded-Proto:\ http
@@ -39,6 +45,15 @@ frontend http-in
         acl is_{{$dir}} hdr_beg(host) -i {{$dir}}.
         use_backend {{$dir}}_cluster if is_{{$dir}}{{end}}
 
+{{range $dir := ls "/services/ssl-servers"}}{{$custdir := printf "/services/ssl-servers/%s" $dir}}
+{{with get $custdir}}{{$data := json .Value}}
+backend {{base .Key}}_cluster
+        balance leastconn
+        option  http-server-close
+        timeout http-keep-alive 3000
+        option  forwardfor
+        server {{base .Key}}server {{$data.IP}}:{{$data.port}}
+{{end}}{{end}}
 {{range $dir := ls "/services/servers"}}{{$custdir := printf "/services/servers/%s" $dir}}
 {{with get $custdir}}{{$data := json .Value}}
 backend {{base .Key}}_cluster
