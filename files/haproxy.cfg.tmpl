@@ -11,7 +11,7 @@ defaults
         option  dontlognull
         timeout http-request 2m
         timeout connect 500ms
-        timeout server 10s
+        timeout server 60m
         timeout client 30s
 
 {{range $dir := ls "/services/ssl-servers"}}
